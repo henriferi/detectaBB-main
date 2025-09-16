@@ -23,7 +23,23 @@ export class ApiService {
 
   private handleError(error: HttpErrorResponse) {
     console.error('Erro da API:', error);
-    return throwError(() => error);
+    
+    let errorMessage = 'Erro desconhecido';
+    
+    if (error.status === 0) {
+      errorMessage = 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet ou tente novamente mais tarde.';
+    } else if (error.status >= 400 && error.status < 500) {
+      errorMessage = error.error?.error || error.error?.message || 'Erro na requisição';
+    } else if (error.status >= 500) {
+      errorMessage = 'Erro interno do servidor. Tente novamente mais tarde.';
+    }
+    
+    const enhancedError = {
+      ...error,
+      userMessage: errorMessage
+    };
+    
+    return throwError(() => enhancedError);
   }
 
   login(email: string, senha: string): Observable<any> {

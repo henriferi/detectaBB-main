@@ -127,7 +127,8 @@ export class UploadPage {
         },
         error: (err) => {
           loading?.dismiss();
-          alert('Erro ao processar o boleto: ' + err.error?.error || 'Erro desconhecido');
+          const errorMessage = err.userMessage || err.error?.error || 'Erro desconhecido';
+          this.showToast(errorMessage, 'danger');
         },
       });
   
@@ -191,7 +192,8 @@ export class UploadPage {
       },
       error: (err) => {
         loading.dismiss();
-        alert('Erro ao processar o boleto: ' + err.error?.error || 'Erro desconhecido');
+        const errorMessage = err.userMessage || err.error?.error || 'Erro desconhecido';
+        this.showToast(errorMessage, 'danger');
       },
     });
   }
