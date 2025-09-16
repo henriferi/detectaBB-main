@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { LoadingController } from '@ionic/angular';
+import { LoadingController, ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { ApiService } from 'src/app/services/api.service';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -20,7 +20,12 @@ export class UploadPage {
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef;
   selectedFile!: File;
 
-  constructor(private router: Router, private apiService: ApiService, private loadingController: LoadingController,) {}
+  constructor(
+    private router: Router, 
+    private apiService: ApiService, 
+    private loadingController: LoadingController,
+    private toastController: ToastController
+  ) {}
 
  async presentLoading(message: string = 'Processando boleto...'): Promise<HTMLIonLoadingElement> {
     const loading = await this.loadingController.create({
@@ -30,6 +35,16 @@ export class UploadPage {
     });
     await loading.present();
     return loading;
+  }
+
+  async showToast(message: string, color: string = 'medium') {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      position: 'bottom',
+      color
+    });
+    await toast.present();
   }
 
   async usarCamera() {
@@ -69,6 +84,13 @@ export class UploadPage {
     } catch (error) {
       loading?.dismiss();
       console.error('Erro ao capturar imagem:', error);
+      
+      const errorMessage = (error as any)?.message || '';
+      if (errorMessage.includes('User cancelled photos app')) {
+        this.showToast('Operação cancelada pelo usuário', 'warning');
+      } else {
+        this.showToast('Erro ao capturar imagem. Tente novamente.', 'danger');
+      }
     }
   }
   
