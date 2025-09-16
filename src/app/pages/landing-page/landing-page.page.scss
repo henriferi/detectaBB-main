@@ -38,8 +38,38 @@
     }
   }
 
+  .quick-access {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    
+    .quick-access-button {
+      --border-color: #2d4fff;
+      --color: #2d4fff;
+      --background: transparent;
+      --border-width: 2px;
+      --border-radius: 25px;
+      font-weight: 600;
+      font-size: 16px;
+      padding: 12px 24px;
+      box-shadow: 0px 2px 8px rgba(45, 73, 255, 0.2);
+      transition: all 0.3s ease;
+      
+      &:hover {
+        --background: #2d4fff;
+        --color: white;
+        transform: translateY(-2px);
+        box-shadow: 0px 4px 12px rgba(45, 73, 255, 0.3);
+      }
+      
+      ion-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+
   .button-container {
-    margin-top: 250px;
+    margin-top: 180px;
     display: flex;
     justify-content: center;
     gap: 30px;

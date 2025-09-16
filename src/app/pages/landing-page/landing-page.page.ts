@@ -23,5 +23,8 @@ export class LandingPagePage implements OnInit {
     this.router.navigate(['/sign-in']);
   }
 
+  acessoRapido() {
+    this.router.navigate(['/upload']);
+  }
 
 }
