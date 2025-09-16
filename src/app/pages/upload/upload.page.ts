@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { LoadingController, ToastController, AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { ApiService } from 'src/app/services/api.service';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -24,8 +24,52 @@ export class UploadPage {
     private router: Router, 
     private apiService: ApiService, 
     private loadingController: LoadingController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private alertController: AlertController
   ) {}
+
+  private isUserLoggedIn(): boolean {
+    return !!localStorage.getItem('token');
+  }
+
+  private getQuickAccessCount(): number {
+    const count = localStorage.getItem('quickAccessCount');
+    return count ? parseInt(count, 10) : 0;
+  }
+
+  private incrementQuickAccessCount(): void {
+    const currentCount = this.getQuickAccessCount();
+    localStorage.setItem('quickAccessCount', (currentCount + 1).toString());
+  }
+
+  private async checkQuickAccessLimit(): Promise<boolean> {
+    if (this.isUserLoggedIn()) {
+      return true; // Usuário logado pode usar sem limite
+    }
+
+    const count = this.getQuickAccessCount();
+    if (count >= 2) {
+      const alert = await this.alertController.create({
+        header: 'Limite Atingido',
+        message: 'Você já validou 2 boletos com o acesso rápido. Para continuar validando boletos, faça login na sua conta.',
+        buttons: [
+          {
+            text: 'Cancelar',
+            role: 'cancel'
+          },
+          {
+            text: 'Fazer Login',
+            handler: () => {
+              this.router.navigate(['/login']);
+            }
+          }
+        ]
+      });
+      await alert.present();
+      return false;
+    }
+    return true;
+  }
 
  async presentLoading(message: string = 'Processando boleto...'): Promise<HTMLIonLoadingElement> {
     const loading = await this.loadingController.create({
@@ -48,6 +92,9 @@ export class UploadPage {
   }
 
   async usarCamera() {
+    const canProceed = await this.checkQuickAccessLimit();
+    if (!canProceed) return;
+
     let loading: HTMLIonLoadingElement | undefined;
     try {
       const image = await Camera.getPhoto({
@@ -72,6 +119,9 @@ export class UploadPage {
       this.apiService.uploadBoleto(file, '').subscribe({
         next: (res) => {
           loading?.dismiss();
+          if (!this.isUserLoggedIn()) {
+            this.incrementQuickAccessCount();
+          }
           console.log('Resposta do backend:', res);
           this.router.navigate(['/result'], { state: { resultado: res } });
         },
@@ -99,6 +149,9 @@ export class UploadPage {
   }
 
   async arquivoSelecionado(event: any) {
+    const canProceed = await this.checkQuickAccessLimit();
+    if (!canProceed) return;
+
     const file = event.target.files[0];
     if (!file) return;
 
@@ -130,6 +183,9 @@ export class UploadPage {
     this.apiService.uploadBoleto(file, senha).subscribe({
       next: (res) => {
         loading.dismiss();
+        if (!this.isUserLoggedIn()) {
+          this.incrementQuickAccessCount();
+        }
         console.log('Resposta do backend:', res);
         this.router.navigate(['/result'], { state: { resultado: res } });
       },
